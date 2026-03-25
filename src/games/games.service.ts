@@ -30,7 +30,15 @@ export class GamesService {
   }
 
   async findOne(id: number): Promise<Game> {
-    const game = await this.gamesRepository.findOneBy({ id });
+    const game = await this.gamesRepository.findOne({
+      where: { id },
+      relations: ['sessions'],
+      order: {
+        sessions: {
+          score: 'DESC'
+        }
+      }
+    });
 
     if (!game) {
       throw new NotFoundException(`El juego con ID ${id} no existe en las "maquinitas"`);
