@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Session } from 'src/sessions/entities/session.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity()
 export class Game {
@@ -16,4 +17,7 @@ export class Game {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @OneToMany(() => Session, (session) => session.game)
+  sessions: Session[];
 }

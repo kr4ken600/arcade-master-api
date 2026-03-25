@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { GamesModule } from './games/games.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { ConfigModule } from '@nestjs/config';
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.NODE_ENV === 'development',
     }),
-    GamesModule
+    GamesModule,
+    SessionsModule
   ],
   controllers: [AppController],
   providers: [AppService],
