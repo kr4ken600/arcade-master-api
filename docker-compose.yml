@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  # DATABASE CONTAINER
+  db:
+    image: mariadb:latest
+    container_name: arcade_db_container
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MARIADB_DATABASE: ${DB_DATABASE}
+    ports:
+      - "3306:3306"
+    volumes:
+      - arcade_data:/var/lib/mysql
+
+  # API CONTAINER
+  app:
+    build: .
+    container_name: arcade_api_container
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE}
+      PORT: ${PORT}
+
+volumes:
+  arcade_data:
