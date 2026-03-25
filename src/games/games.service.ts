@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { UpdateGameDto } from './dto/update-game.dto';
 import { Game } from './entities/game.entity';
@@ -10,18 +15,23 @@ export class GamesService {
   constructor(
     @InjectRepository(Game)
     private gamesRepository: Repository<Game>,
-  ) { }
+  ) {}
 
   async create(createGameDto: CreateGameDto): Promise<Game> {
     try {
       const newGame = this.gamesRepository.create(createGameDto);
       return await this.gamesRepository.save(newGame);
-    } catch (error) {
-      if (error.code === 'ER_DUP_ENTRY') {
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'ER_DUP_ENTRY'
+      ) {
         throw new ConflictException('¡Ese juego ya está en el catálogo!');
       }
 
-      throw new InternalServerErrorException('Algo salió muy mal en el servidor');
+      throw new InternalServerErrorException();
     }
   }
 
@@ -35,13 +45,15 @@ export class GamesService {
       relations: ['sessions'],
       order: {
         sessions: {
-          score: 'DESC'
-        }
-      }
+          score: 'DESC',
+        },
+      },
     });
 
     if (!game) {
-      throw new NotFoundException(`El juego con ID ${id} no existe en las "maquinitas"`);
+      throw new NotFoundException(
+        `El juego con ID ${id} no existe en las "maquinitas"`,
+      );
     }
 
     return game;
@@ -50,17 +62,24 @@ export class GamesService {
   async update(id: number, updateGameDto: UpdateGameDto): Promise<Game> {
     const game = await this.gamesRepository.preload({
       id: id,
-      ...updateGameDto
+      ...updateGameDto,
     });
 
     if (!game) {
-      throw new NotFoundException(`No se puede actualizar: El juego #${id} no existe`);
+      throw new NotFoundException(
+        `No se puede actualizar: El juego #${id} no existe`,
+      );
     }
 
     try {
       return await this.gamesRepository.save(game);
-    } catch (error) {
-      if (error.code === 'ER_DUP_ENTRY') {
+    } catch (error: unknown) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'ER_DUP_ENTRY'
+      ) {
         throw new ConflictException('Ya existe otro juego con ese título');
       }
       throw new InternalServerErrorException();

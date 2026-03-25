@@ -5,7 +5,7 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 export class Game {
   @PrimaryGeneratedColumn()
   id: number;
-  
+
   @Column({ unique: true })
   title: string;
 

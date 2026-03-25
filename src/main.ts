@@ -12,4 +12,8 @@ async function bootstrap() {
 
   console.log(`Corriendo en: ${await app.getUrl()}`);
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  console.error('Error al iniciar la maquinita:', err);
+  process.exit(1);
+});
