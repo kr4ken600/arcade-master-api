@@ -25,6 +25,9 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
       autoLoadEntities: true,
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.NODE_ENV === 'development',
+      ssl: {
+        rejectUnauthorized: false
+      }
     }),
     GamesModule,
     SessionsModule,
