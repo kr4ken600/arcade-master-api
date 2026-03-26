@@ -2,7 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsInt, Min, MaxLength } from 'class-validator';
 
 export class CreateGameDto {
-  @ApiProperty({ description: 'El nombre del juego', example: 'The King of Fighters 2002' })
+  @ApiProperty({
+    description: 'El nombre del juego',
+    example: 'The King of Fighters 2002',
+  })
   @IsString()
   @MaxLength(50)
   title: string;

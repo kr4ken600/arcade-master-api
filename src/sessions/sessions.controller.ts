@@ -12,6 +12,7 @@ import { SessionsService } from './sessions.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('Sessions')
 @Controller('sessions')
@@ -23,11 +24,13 @@ export class SessionsController {
     return this.sessionsService.create(createSessionDto);
   }
 
+  @Public()
   @Get()
   findAll() {
     return this.sessionsService.findAll();
   }
 
+  @Public()
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.sessionsService.findOne(id);
