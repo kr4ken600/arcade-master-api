@@ -1,5 +1,5 @@
-import { Game } from "src/games/entities/game.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Game } from 'src/games/entities/game.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Session {

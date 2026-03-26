@@ -6,9 +6,7 @@ import { Session } from './entities/session.entity';
 import { Game } from 'src/games/entities/game.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Session, Game])
-  ],
+  imports: [TypeOrmModule.forFeature([Session, Game])],
   controllers: [SessionsController],
   providers: [SessionsService],
 })
