@@ -7,21 +7,25 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService
-  ) { }
+    private readonly jwtService: JwtService,
+  ) {}
 
   async login(email: string, pass: string) {
     const user = await this.usersService.findByEmail(email);
 
-    if(user && (await bcrypt.compare(pass, user.password))) {
-      const payload = { sub: user.id, email: user.email, username: user.username };
+    if (user && (await bcrypt.compare(pass, user.password))) {
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        username: user.username,
+      };
 
       return {
         access_token: this.jwtService.sign(payload),
-        user: { id: user.id, email: user.email, username: user.username }
+        user: { id: user.id, email: user.email, username: user.username },
       };
     }
 
     throw new UnauthorizedException('Credenciales inválidas');
   }
-} 
+}
