@@ -16,7 +16,7 @@ services:
 
   # API CONTAINER
   app:
-    build: .
+    image: kr4ken008/arcade-master-api
     container_name: arcade_api_container
     ports:
       - "${PORT}:${PORT}"
