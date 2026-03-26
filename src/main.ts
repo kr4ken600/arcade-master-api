@@ -1,11 +1,16 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
 
   if (process.env.NODE_ENV === 'development') {
     const configSwagger = new DocumentBuilder()
@@ -16,7 +21,7 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, configSwagger);
     SwaggerModule.setup('api', app, document);
-    
+
     console.log('📖 Swagger documentation is available at: /api');
   }
 
