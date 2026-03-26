@@ -93,7 +93,8 @@
       "main.ts",
       ".module.ts$",
       ".entity.ts$",
-      ".dto.ts$"
+      ".dto.ts$",
+      ".decorator.ts$"
     ]
   }
 }

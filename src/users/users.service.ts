@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -11,7 +16,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
@@ -25,16 +30,18 @@ export class UsersService {
       });
 
       return await this.usersRepository.save(newUser);
-    } catch (error) {
+    } catch (error: unknown) {
       if (
         error &&
         typeof error === 'object' &&
         'code' in error &&
         error.code === 'ER_DUP_ENTRY'
       ) {
-        throw new ConflictException('Correo o nombre de usuario ya esta en uso');
+        throw new ConflictException(
+          'Correo o nombre de usuario ya esta en uso',
+        );
       }
-      throw new InternalServerErrorException("Error interno");
+      throw new InternalServerErrorException('Error interno');
     }
   }
 
@@ -73,7 +80,9 @@ export class UsersService {
         'code' in error &&
         error.code === 'ER_DUP_ENTRY'
       ) {
-        throw new ConflictException('Correo o nombre de usuario ya esta en uso');
+        throw new ConflictException(
+          'Correo o nombre de usuario ya esta en uso',
+        );
       }
 
       throw new InternalServerErrorException();
@@ -83,12 +92,12 @@ export class UsersService {
   async remove(id: number) {
     const user = await this.findOne(id);
 
-    await this.usersRepository.remove(user); 
+    await this.usersRepository.remove(user);
   }
 
   async findByEmail(email: string) {
     const user = await this.usersRepository.findOne({
-      where: { email: email}
+      where: { email: email },
     });
 
     if (!user) {

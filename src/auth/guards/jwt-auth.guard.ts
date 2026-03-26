@@ -1,8 +1,12 @@
-import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { AuthGuard } from "@nestjs/passport";
-import { Observable } from "rxjs";
-import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
+import { Observable } from 'rxjs';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -10,23 +14,29 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if(isPublic) {
+    if (isPublic) {
       return true;
     }
 
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any) {
-    if(err || !user) {
-      throw err || new UnauthorizedException('¡Ficha inválida o expirada! Registrate o vuelve a inciar sesion.');
+  handleRequest<TUser = any>(err: unknown, user: unknown): TUser {
+    if (err || !user) {
+      throw err instanceof Error
+        ? err
+        : new UnauthorizedException(
+            '¡Ficha inválida o expirada! Registrate o vuelve a inciar sesion.',
+          );
     }
-    return user;
+    return user as TUser;
   }
 }
