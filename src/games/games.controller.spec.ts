@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GamesController } from './games.controller';
 import { GamesService } from './games.service';
 import { CreateGameDto } from './dto/create-game.dto';
-import { UpdateGameDto } from './dto/update-game.dto';
 
 describe('GamesController', () => {
   let controller: GamesController;
