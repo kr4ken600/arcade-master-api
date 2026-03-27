@@ -6,7 +6,6 @@ import { Session } from './entities/session.entity';
 import { Repository } from 'typeorm';
 import { Game } from 'src/games/entities/game.entity';
 import { SessionsGateway } from './sessions.gateway';
-import { resolve } from 'path';
 
 @Injectable()
 export class SessionsService {
@@ -133,7 +132,7 @@ export class SessionsService {
       .getRawMany();
   }
 
-  async compareScores(scoreCompare: number, gameId: number): Promise<boolean> {
+  async compareScores(scoreCompare: number, gameId: number) {
     const highestSession = await this.sessionsRepository.findOne({
       where: { game: { id: gameId } },
       order: { score: 'DESC' },

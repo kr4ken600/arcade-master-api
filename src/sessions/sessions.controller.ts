@@ -14,6 +14,7 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { Request } from 'express';
 
 @ApiTags('Sessions')
 @Controller('sessions')
@@ -21,7 +22,10 @@ export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
   @Post()
-  create(@Body() createSessionDto: CreateSessionDto, @Req() req: any) {
+  create(
+    @Body() createSessionDto: CreateSessionDto,
+    @Req() req: Request & { user: { userId: number } },
+  ) {
     const userId = req.user.userId;
     return this.sessionsService.create(createSessionDto, userId);
   }
