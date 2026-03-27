@@ -37,6 +37,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             '¡Ficha inválida o expirada! Registrate o vuelve a inciar sesion.',
           );
     }
+
     return user as TUser;
   }
 }
