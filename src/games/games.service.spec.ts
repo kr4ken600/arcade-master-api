@@ -108,7 +108,7 @@ describe('GamesService', () => {
 
       expect(
         service.create(createGameDto),
-      ).rejects.toThrowErrorMatchingInlineSnapshot(`"Internal Server Error"`);
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`"Ocurrió un error inesperado en el Arcade. Por favor, inténtalo de nuevo más tarde."`);
     });
   });
 
@@ -164,7 +164,7 @@ describe('GamesService', () => {
 
       expect(
         service.update(1, updateGameDto),
-      ).rejects.toThrowErrorMatchingInlineSnapshot(`"Internal Server Error"`);
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`"Ocurrió un error inesperado en el Arcade. Por favor, inténtalo de nuevo más tarde."`);
     });
   });
 
