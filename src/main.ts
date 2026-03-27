@@ -26,12 +26,13 @@ async function bootstrap() {
       .setTitle('Arcade Master API')
       .setDescription('API para gestionar juegos arcade y récords de sesiones')
       .setVersion('1.0')
+      .addBearerAuth()
       .build();
 
     const document = SwaggerModule.createDocument(app, configSwagger);
-    SwaggerModule.setup('api', app, document);
+    SwaggerModule.setup('api/docs', app, document);
 
-    console.log('📖 Swagger documentation is available at: /api');
+    console.log('📖 Swagger documentation is available at: /api/docs');
   }
 
   const port = process.env.PORT || 3000;
