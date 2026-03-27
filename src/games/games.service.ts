@@ -15,7 +15,7 @@ export class GamesService {
   constructor(
     @InjectRepository(Game)
     private gamesRepository: Repository<Game>,
-  ) {}
+  ) { }
 
   async create(createGameDto: CreateGameDto): Promise<Game> {
     try {
@@ -90,5 +90,17 @@ export class GamesService {
     const game = await this.findOne(id);
 
     await this.gamesRepository.remove(game);
+  }
+
+  async updateImage(id: number, imageUrl: string) {
+    const game = await this.findOne(id);
+
+    game.imageUrl = imageUrl;
+    await this.gamesRepository.save(game);
+
+    return {
+      message: '¡Portada subida con éxito!',
+      imageUrl: game.imageUrl,
+    }
   }
 }
