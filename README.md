@@ -56,6 +56,9 @@
     CLOUDINARY_CLOUD_NAME=ADD_INFO
     CLOUDINARY_API_KEY=ADD_INFO
     CLOUDINARY_API_SECRET=ADD_INFO
+
+    # BetterStack
+    SENTRY_DSN=ADD_INFO
     ```
 
 4. Levanta el servidor en modo desarrollo:
