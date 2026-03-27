@@ -4,10 +4,11 @@ import { SessionsController } from './sessions.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Session } from './entities/session.entity';
 import { Game } from 'src/games/entities/game.entity';
+import { SessionsGateway } from './sessions.gateway';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Session, Game])],
   controllers: [SessionsController],
-  providers: [SessionsService],
+  providers: [SessionsService, SessionsGateway],
 })
 export class SessionsModule {}

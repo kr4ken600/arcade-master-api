@@ -5,6 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Session } from './entities/session.entity';
 import { Repository } from 'typeorm';
 import { Game } from 'src/games/entities/game.entity';
+import { SessionsGateway } from './sessions.gateway';
+import { resolve } from 'path';
 
 @Injectable()
 export class SessionsService {
@@ -13,7 +15,8 @@ export class SessionsService {
     private sessionsRepository: Repository<Session>,
     @InjectRepository(Game)
     private gamesRepository: Repository<Game>,
-  ) {}
+    private readonly sessionsGateway: SessionsGateway
+  ) { }
 
   async create(createSessionDto: CreateSessionDto, userId: number): Promise<Session> {
     const { gameId, ...sessionData } = createSessionDto;
@@ -26,8 +29,21 @@ export class SessionsService {
       game: game,
       user: { id: userId },
     });
+    
+    
+    const compareScore = await this.compareScores(newSession.score, createSessionDto.gameId);
+    const savedSession = await this.sessionsRepository.save(newSession);
 
-    return await this.sessionsRepository.save(newSession);
+    if (compareScore) {
+      this.sessionsGateway.broadcastNewRecord({
+        message: '¡NUEVO RÉCORD ESTABLECIDO!',
+        score: savedSession.score,
+        gameId: createSessionDto.gameId,
+        controller: savedSession.controllerUsed
+      });
+    }
+
+    return savedSession;
   }
 
   async findAll(): Promise<Session[]> {
@@ -75,13 +91,13 @@ export class SessionsService {
     const highScore = await this.sessionsRepository.createQueryBuilder('session')
       .leftJoinAndSelect('session.game', 'game')
       .leftJoin('session.user', 'user')
-      .addSelect(['user.username']) 
+      .addSelect(['user.username'])
       .where('session.gameId = :gameId', { gameId })
       .orderBy('session.score', 'DESC')
       .limit(10)
       .getMany();
 
-    if(highScore.length === 0) throw new NotFoundException('No hay puntuaciones registradas para este juego');
+    if (highScore.length === 0) throw new NotFoundException('No hay puntuaciones registradas para este juego');
 
     return highScore;
   }
@@ -104,5 +120,17 @@ export class SessionsService {
       .groupBy('session.controllerUsed')
       .orderBy('usageCount', 'DESC')
       .getRawMany();
+  }
+
+  async compareScores(scoreCompare: number, gameId: number): Promise<boolean> {
+    const highestSession = await this.sessionsRepository.findOne({
+      where: { game: { id: gameId } },
+      order: { score: 'DESC' },
+    });
+
+    if(!highestSession) return false;
+    console.log(highestSession , scoreCompare > highestSession.score);
+    
+    return scoreCompare > highestSession.score;
   }
 }
