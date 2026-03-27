@@ -91,4 +91,16 @@ export class GamesService {
 
     await this.gamesRepository.remove(game);
   }
+
+  async updateImage(id: number, imageUrl: string) {
+    const game = await this.findOne(id);
+
+    game.imageUrl = imageUrl;
+    await this.gamesRepository.save(game);
+
+    return {
+      message: '¡Portada subida con éxito!',
+      imageUrl: game.imageUrl,
+    };
+  }
 }
