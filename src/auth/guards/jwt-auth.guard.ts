@@ -7,6 +7,7 @@ import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import * as Sentry from '@sentry/node';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -37,6 +38,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             '¡Ficha inválida o expirada! Registrate o vuelve a inciar sesion.',
           );
     }
+    
     return user as TUser;
   }
 }
