@@ -22,7 +22,7 @@ export class SessionsController {
 
   @Post()
   create(@Body() createSessionDto: CreateSessionDto, @Req() req: any) {
-    const userId = req.user.userId
+    const userId = req.user.userId;
     return this.sessionsService.create(createSessionDto, userId);
   }
 
@@ -65,9 +65,7 @@ export class SessionsController {
 
   @Public()
   @Get('game/:gameId/highscores')
-  getHighScores(
-    @Param('gameId', ParseIntPipe) gameId: number,
-  ) {
+  getHighScores(@Param('gameId', ParseIntPipe) gameId: number) {
     return this.sessionsService.getHighScores(gameId);
   }
 }

@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { v2 as cloudinary } from 'cloudinary'
+import { Injectable } from '@nestjs/common';
+import { v2 as cloudinary } from 'cloudinary';
 import * as streamifier from 'streamifier';
 
 @Injectable()
@@ -17,12 +17,12 @@ export class CloudinaryService {
       const uploadStream = cloudinary.uploader.upload_stream(
         { folder: 'arcade_games' },
         (error, result) => {
-          if(error) return reject(error);
+          if (error) return reject(error);
           resolve(result);
-        }
+        },
       );
 
       streamifier.createReadStream(file.buffer).pipe(uploadStream);
-    })
+    });
   }
 }

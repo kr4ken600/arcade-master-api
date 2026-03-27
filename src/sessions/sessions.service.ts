@@ -15,10 +15,13 @@ export class SessionsService {
     private sessionsRepository: Repository<Session>,
     @InjectRepository(Game)
     private gamesRepository: Repository<Game>,
-    private readonly sessionsGateway: SessionsGateway
-  ) { }
+    private readonly sessionsGateway: SessionsGateway,
+  ) {}
 
-  async create(createSessionDto: CreateSessionDto, userId: number): Promise<Session> {
+  async create(
+    createSessionDto: CreateSessionDto,
+    userId: number,
+  ): Promise<Session> {
     const { gameId, ...sessionData } = createSessionDto;
 
     const game = await this.gamesRepository.findOneBy({ id: gameId });
@@ -29,9 +32,11 @@ export class SessionsService {
       game: game,
       user: { id: userId },
     });
-    
-    
-    const compareScore = await this.compareScores(newSession.score, createSessionDto.gameId);
+
+    const compareScore = await this.compareScores(
+      newSession.score,
+      createSessionDto.gameId,
+    );
     const savedSession = await this.sessionsRepository.save(newSession);
 
     if (compareScore) {
@@ -39,7 +44,7 @@ export class SessionsService {
         message: '¡NUEVO RÉCORD ESTABLECIDO!',
         score: savedSession.score,
         gameId: createSessionDto.gameId,
-        controller: savedSession.controllerUsed
+        controller: savedSession.controllerUsed,
       });
     }
 
@@ -88,7 +93,8 @@ export class SessionsService {
   }
 
   async getHighScores(gameId: number) {
-    const highScore = await this.sessionsRepository.createQueryBuilder('session')
+    const highScore = await this.sessionsRepository
+      .createQueryBuilder('session')
       .leftJoinAndSelect('session.game', 'game')
       .leftJoin('session.user', 'user')
       .addSelect(['user.username'])
@@ -97,13 +103,17 @@ export class SessionsService {
       .limit(10)
       .getMany();
 
-    if (highScore.length === 0) throw new NotFoundException('No hay puntuaciones registradas para este juego');
+    if (highScore.length === 0)
+      throw new NotFoundException(
+        'No hay puntuaciones registradas para este juego',
+      );
 
     return highScore;
   }
 
   async getMostPlayedGames() {
-    return this.sessionsRepository.createQueryBuilder('session')
+    return this.sessionsRepository
+      .createQueryBuilder('session')
       .leftJoin('session.game', 'game')
       .select('game.title', 'gameTitle')
       .addSelect('COUNT(session.id)', 'totalSessions')
@@ -114,7 +124,8 @@ export class SessionsService {
   }
 
   async getControllerStats() {
-    return this.sessionsRepository.createQueryBuilder('session')
+    return this.sessionsRepository
+      .createQueryBuilder('session')
       .select('session.controllerUsed', 'controller')
       .addSelect('COUNT(session.id)', 'usageCount')
       .groupBy('session.controllerUsed')
@@ -128,9 +139,9 @@ export class SessionsService {
       order: { score: 'DESC' },
     });
 
-    if(!highestSession) return false;
-    console.log(highestSession , scoreCompare > highestSession.score);
-    
+    if (!highestSession) return false;
+    console.log(highestSession, scoreCompare > highestSession.score);
+
     return scoreCompare > highestSession.score;
   }
 }
