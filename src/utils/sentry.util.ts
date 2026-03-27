@@ -1,7 +1,10 @@
 import * as Sentry from '@sentry/node';
 import { Logger, InternalServerErrorException } from '@nestjs/common';
 
-export const loggerSentry = (context: string, error: unknown): InternalServerErrorException => {
+export const loggerSentry = (
+  context: string,
+  error: unknown,
+): InternalServerErrorException => {
   const logger = new Logger(context);
   let errorMessage = 'Error desconocido';
   let errorStack: string | undefined = undefined;
@@ -19,9 +22,11 @@ export const loggerSentry = (context: string, error: unknown): InternalServerErr
 
   Sentry.captureException(error, {
     tags: {
-      module: context
-    }
+      module: context,
+    },
   });
 
-  return new InternalServerErrorException('Ocurrió un error inesperado en el Arcade. Por favor, inténtalo de nuevo más tarde.');
-}
+  return new InternalServerErrorException(
+    'Ocurrió un error inesperado en el Arcade. Por favor, inténtalo de nuevo más tarde.',
+  );
+};
