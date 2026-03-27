@@ -9,6 +9,8 @@ import { UpdateGameDto } from './dto/update-game.dto';
 import { Game } from './entities/game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as Sentry from '@sentry/node';
+import { loggerSentry } from 'src/utils/sentry.util';
 
 @Injectable()
 export class GamesService {
@@ -31,7 +33,7 @@ export class GamesService {
         throw new ConflictException('¡Ese juego ya está en el catálogo!');
       }
 
-      throw new InternalServerErrorException();
+      throw loggerSentry(GamesService.name, error);
     }
   }
 
@@ -82,7 +84,8 @@ export class GamesService {
       ) {
         throw new ConflictException('Ya existe otro juego con ese título');
       }
-      throw new InternalServerErrorException();
+      
+      throw loggerSentry(GamesService.name, error);
     }
   }
 
