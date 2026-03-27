@@ -18,11 +18,12 @@ export class AuthService {
         sub: user.id,
         email: user.email,
         username: user.username,
+        role: user.role,
       };
 
       return {
         access_token: this.jwtService.sign(payload),
-        user: { id: user.id, email: user.email, username: user.username },
+        user: { id: user.id, email: user.email, username: user.username, role: user.role, },
       };
     }
 
