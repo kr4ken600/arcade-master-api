@@ -79,6 +79,7 @@ describe('SessionsService', () => {
       mockSessionsRepository.save.mockResolvedValue(newSession);
 
       const result = await service.create(createSessionMock);
+      console.log(newSession, result);
 
 
       expect(result).toEqual(newSession);
