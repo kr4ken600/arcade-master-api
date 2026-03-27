@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Req,
 } from '@nestjs/common';
 import { SessionsService } from './sessions.service';
 import { CreateSessionDto } from './dto/create-session.dto';
@@ -20,8 +21,9 @@ export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
   @Post()
-  create(@Body() createSessionDto: CreateSessionDto) {
-    return this.sessionsService.create(createSessionDto);
+  create(@Body() createSessionDto: CreateSessionDto, @Req() req: any) {
+    const userId = req.user.userId
+    return this.sessionsService.create(createSessionDto, userId);
   }
 
   @Public()
@@ -47,5 +49,25 @@ export class SessionsController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.sessionsService.remove(id);
+  }
+
+  @Public()
+  @Get('stats/most-played')
+  getMostPlayed() {
+    return this.sessionsService.getMostPlayedGames();
+  }
+
+  @Public()
+  @Get('stats/controllers')
+  getControllerStats() {
+    return this.sessionsService.getControllerStats();
+  }
+
+  @Public()
+  @Get('game/:gameId/highscores')
+  getHighScores(
+    @Param('gameId', ParseIntPipe) gameId: number,
+  ) {
+    return this.sessionsService.getHighScores(gameId);
   }
 }

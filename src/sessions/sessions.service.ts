@@ -15,16 +15,16 @@ export class SessionsService {
     private gamesRepository: Repository<Game>,
   ) {}
 
-  async create(createSessionDto: CreateSessionDto): Promise<Session> {
+  async create(createSessionDto: CreateSessionDto, userId: number): Promise<Session> {
     const { gameId, ...sessionData } = createSessionDto;
 
     const game = await this.gamesRepository.findOneBy({ id: gameId });
     if (!game)
       throw new NotFoundException('¡Ese juego no existe en el catálogo!');
-
     const newSession = this.sessionsRepository.create({
       ...sessionData,
       game: game,
+      user: { id: userId },
     });
 
     return await this.sessionsRepository.save(newSession);
@@ -69,5 +69,40 @@ export class SessionsService {
   async remove(id: number): Promise<void> {
     const session = await this.findOne(id);
     await this.sessionsRepository.remove(session);
+  }
+
+  async getHighScores(gameId: number) {
+    const highScore = await this.sessionsRepository.createQueryBuilder('session')
+      .leftJoinAndSelect('session.game', 'game')
+      .leftJoin('session.user', 'user')
+      .addSelect(['user.username']) 
+      .where('session.gameId = :gameId', { gameId })
+      .orderBy('session.score', 'DESC')
+      .limit(10)
+      .getMany();
+
+    if(highScore.length === 0) throw new NotFoundException('No hay puntuaciones registradas para este juego');
+
+    return highScore;
+  }
+
+  async getMostPlayedGames() {
+    return this.sessionsRepository.createQueryBuilder('session')
+      .leftJoin('session.game', 'game')
+      .select('game.title', 'gameTitle')
+      .addSelect('COUNT(session.id)', 'totalSessions')
+      .groupBy('game.id')
+      .orderBy('totalSessions', 'DESC')
+      .limit(5)
+      .getRawMany();
+  }
+
+  async getControllerStats() {
+    return this.sessionsRepository.createQueryBuilder('session')
+      .select('session.controllerUsed', 'controller')
+      .addSelect('COUNT(session.id)', 'usageCount')
+      .groupBy('session.controllerUsed')
+      .orderBy('usageCount', 'DESC')
+      .getRawMany();
   }
 }
