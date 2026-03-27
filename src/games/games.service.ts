@@ -15,7 +15,7 @@ export class GamesService {
   constructor(
     @InjectRepository(Game)
     private gamesRepository: Repository<Game>,
-  ) { }
+  ) {}
 
   async create(createGameDto: CreateGameDto): Promise<Game> {
     try {
@@ -101,6 +101,6 @@ export class GamesService {
     return {
       message: '¡Portada subida con éxito!',
       imageUrl: game.imageUrl,
-    }
+    };
   }
 }

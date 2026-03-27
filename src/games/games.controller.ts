@@ -33,7 +33,7 @@ export class GamesController {
   constructor(
     private readonly gamesService: GamesService,
     private readonly cloudinaryService: CloudinaryService,
-  ) { }
+  ) {}
 
   @Post()
   @Roles(Role.ADMIN)
@@ -71,10 +71,15 @@ export class GamesController {
 
   @Post(':id/image')
   @Roles(Role.ADMIN)
-  @UseInterceptors(FileInterceptor('file', {
-    storage: memoryStorage()
-  }))
-  async uploadGameImage(@Param('id', ParseIntPipe) id: number, @UploadedFile() file: Express.Multer.File) {
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+    }),
+  )
+  async uploadGameImage(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     if (!file) {
       throw new BadRequestException('¡Olvidaste adjuntar la imagen!');
     }
