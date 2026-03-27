@@ -39,7 +39,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
           );
     }
     
-    Sentry.captureException(err);
     return user as TUser;
   }
 }
