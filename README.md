@@ -1,98 +1,96 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <a href="http://nestjs.com/" target="blank"><img src="https://res.cloudinary.com/dq3szvi4l/image/upload/v1774638336/arcade_master_api_oeimqy.png" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# 🕹️ Arcade Master API
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+¡Bienvenido al motor trasero del salón de Arcade definitivo!
 
-## Description
+**Arcade Master API** es un backend robusto construido con **NestJS** diseñado para gestionar catálogos de juegos retro, registrar sesiones de juego desde tableros arcade custom, calcular estadísticas globales y transmitir la emoción de los nuevos récords (High Scores) en tiempo real a las aplicaciones cliente (Ionic/Angular).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## ✨ Características Principales (Nivel S)
 
-## Project setup
+* 🛡️ **Seguridad y Roles (RBAC):** Sistema de autenticación con JWT. Diferencia entre jugadores normales y Administradores (los únicos con la llave para modificar el catálogo de máquinas).
+* 📊 **Estadísticas Avanzadas:** Uso de TypeORM QueryBuilder para calcular en base de datos los juegos más populares, el top 10 de récords y el uso de hardware (ej. Arcade Joysticks vs Gamepads).
+* ☁️ **Almacenamiento en la Nube:** Integración nativa con Multer y **Cloudinary** para almacenar las marquesinas y portadas de los juegos de forma segura y sin saturar el servidor.
+* ⚡ **Tiempo Real (WebSockets):** Integración con **Socket.io** para emitir eventos de *NUEVO RÉCORD* instantáneamente a todos los clientes conectados cuando un jugador rompe la marca histórica.
+* 🧪 **Código Blindado:** 100% de cobertura en pruebas unitarias (Controladores, Servicios, Guards y Gateways) usando **Jest**.
+
+## 🛠️ Stack Tecnológico
+
+* **Framework:** [NestJS](https://nestjs.com/) (TypeScript)
+* **Base de Datos:** MariaDB
+* **ORM:** [TypeORM](https://typeorm.io/)
+* **Archivos:** [Cloudinary](https://cloudinary.com/) API
+* **WebSockets:** Socket.io
+* **Testing:** Jest
+
+## 🚀 Instalación y Despliegue Local
+
+1. Clona este repositorio.
+2. Instala las dependencias del proyecto:
+
+   ```bash
+   npm install
+   ```
+
+3. Crea un archivo .env en la raíz del proyecto basándote en la siguiente estructura:
+
+    ```bash
+    # Database
+    DB_HOST=ADD_INFO
+    DB_PORT=ADD_INFO
+    DB_USERNAME=ADD_INFO
+    DB_PASSWORD=ADD_INFO
+    DB_DATABASE=ADD_INFO
+    DB_SYNCHRONIZE=ADD_INFO
+
+    # Proyect
+    NODE_ENV=ADD_INFO #development|prod
+    PORT=ADD_INFO
+
+    # JWT Config
+    JWT_SECRET
+
+    # Cloudinary
+    CLOUDINARY_CLOUD_NAME=ADD_INFO
+    CLOUDINARY_API_KEY=ADD_INFO
+    CLOUDINARY_API_SECRET=ADD_INFO
+    ```
+
+4. Levanta el servidor en modo desarrollo:
+
+    ```bash
+    npm run start:dev
+    ```
+
+## Eventos WebSocket Disponibles
+
+El servidor de WebSockets corre en el mismo puerto que la API HTTP. Puedes conectarte y escuchar los siguientes eventos:
+
+* `newHighScore`: Se emite globalmente cuando una partida recién guardada supera el récord histórico de un juego.
+
+* **Payload**: { message, score, gameId, controller }
+
+## 🧪 Pruebas Unitarias
+
+Este proyecto mantiene un estándar estricto de calidad. Para correr la suite de pruebas:
 
 ```bash
-$ npm install
+# Pruebas unitarias
+npm run test
+
+# Reporte de cobertura
+npm run test:cov
 ```
 
-## Compile and run the project
+## Endpoints
 
-```bash
-# development
-$ npm run start
+Para un desglose detallado de cada ruta, sus métodos HTTP, requisitos de autenticación y ejemplos de payload, consulta el archivo [ENDPOINTS.md](ENDPOINTS.md).
 
-# watch mode
-$ npm run start:dev
+## 👾 Player 1 / Autor
 
-# production mode
-$ npm run start:prod
-```
+Diseñado y desarrollado con ☕ y mucho código por [**Kr4ken600**](https://github.com/kr4ken600).<br>
+*(Architect of the Arcade Master API)*
 
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**"Insert Coin to Continue..."** 🪙

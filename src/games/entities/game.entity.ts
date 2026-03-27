@@ -15,6 +15,9 @@ export class Game {
   @Column()
   year: number;
 
+  @Column({ nullable: true })
+  imageUrl: string;
+
   @Column({ default: true })
   isActive: boolean;
 

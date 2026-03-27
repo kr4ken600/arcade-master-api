@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Session } from './entities/session.entity';
 import { Repository } from 'typeorm';
 import { Game } from 'src/games/entities/game.entity';
+import { SessionsGateway } from './sessions.gateway';
 
 @Injectable()
 export class SessionsService {
@@ -13,21 +14,40 @@ export class SessionsService {
     private sessionsRepository: Repository<Session>,
     @InjectRepository(Game)
     private gamesRepository: Repository<Game>,
+    private readonly sessionsGateway: SessionsGateway,
   ) {}
 
-  async create(createSessionDto: CreateSessionDto): Promise<Session> {
+  async create(
+    createSessionDto: CreateSessionDto,
+    userId: number,
+  ): Promise<Session> {
     const { gameId, ...sessionData } = createSessionDto;
 
     const game = await this.gamesRepository.findOneBy({ id: gameId });
     if (!game)
       throw new NotFoundException('¡Ese juego no existe en el catálogo!');
-
     const newSession = this.sessionsRepository.create({
       ...sessionData,
       game: game,
+      user: { id: userId },
     });
 
-    return await this.sessionsRepository.save(newSession);
+    const compareScore = await this.compareScores(
+      newSession.score,
+      createSessionDto.gameId,
+    );
+    const savedSession = await this.sessionsRepository.save(newSession);
+
+    if (compareScore) {
+      this.sessionsGateway.broadcastNewRecord({
+        message: '¡NUEVO RÉCORD ESTABLECIDO!',
+        score: savedSession.score,
+        gameId: createSessionDto.gameId,
+        controller: savedSession.controllerUsed,
+      });
+    }
+
+    return savedSession;
   }
 
   async findAll(): Promise<Session[]> {
@@ -69,5 +89,58 @@ export class SessionsService {
   async remove(id: number): Promise<void> {
     const session = await this.findOne(id);
     await this.sessionsRepository.remove(session);
+  }
+
+  async getHighScores(gameId: number) {
+    const highScore = await this.sessionsRepository
+      .createQueryBuilder('session')
+      .leftJoinAndSelect('session.game', 'game')
+      .leftJoin('session.user', 'user')
+      .addSelect(['user.username'])
+      .where('session.gameId = :gameId', { gameId })
+      .orderBy('session.score', 'DESC')
+      .limit(10)
+      .getMany();
+
+    if (highScore.length === 0)
+      throw new NotFoundException(
+        'No hay puntuaciones registradas para este juego',
+      );
+
+    return highScore;
+  }
+
+  async getMostPlayedGames() {
+    return this.sessionsRepository
+      .createQueryBuilder('session')
+      .leftJoin('session.game', 'game')
+      .select('game.title', 'gameTitle')
+      .addSelect('COUNT(session.id)', 'totalSessions')
+      .groupBy('game.id')
+      .orderBy('totalSessions', 'DESC')
+      .limit(5)
+      .getRawMany();
+  }
+
+  async getControllerStats() {
+    return this.sessionsRepository
+      .createQueryBuilder('session')
+      .select('session.controllerUsed', 'controller')
+      .addSelect('COUNT(session.id)', 'usageCount')
+      .groupBy('session.controllerUsed')
+      .orderBy('usageCount', 'DESC')
+      .getRawMany();
+  }
+
+  async compareScores(scoreCompare: number, gameId: number) {
+    const highestSession = await this.sessionsRepository.findOne({
+      where: { game: { id: gameId } },
+      order: { score: 'DESC' },
+    });
+
+    if (!highestSession) return false;
+    console.log(highestSession, scoreCompare > highestSession.score);
+
+    return scoreCompare > highestSession.score;
   }
 }

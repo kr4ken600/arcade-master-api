@@ -1,4 +1,5 @@
 import { Game } from 'src/games/entities/game.entity';
+import { User } from 'src/users/entities/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -17,4 +18,7 @@ export class Session {
 
   @ManyToOne(() => Game, (game) => game.sessions, { onDelete: 'CASCADE' })
   game: Game;
+
+  @ManyToOne(() => User, (user) => user.sessions, { onDelete: 'CASCADE' })
+  user: User;
 }
