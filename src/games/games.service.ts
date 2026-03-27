@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
@@ -9,7 +8,6 @@ import { UpdateGameDto } from './dto/update-game.dto';
 import { Game } from './entities/game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as Sentry from '@sentry/node';
 import { loggerSentry } from 'src/utils/sentry.util';
 
 @Injectable()
@@ -84,7 +82,7 @@ export class GamesService {
       ) {
         throw new ConflictException('Ya existe otro juego con ese título');
       }
-      
+
       throw loggerSentry(GamesService.name, error);
     }
   }
