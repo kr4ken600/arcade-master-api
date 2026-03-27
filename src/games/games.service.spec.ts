@@ -198,4 +198,34 @@ describe('GamesService', () => {
       );
     });
   });
+
+  describe('updateImage', () => {
+    it('debería actualizar la imagen del juego y devolver el mensaje de éxito', async () => {
+      const existingGame = { id: 1, title: 'KOF 2002', imageUrl: null };
+      const newImageUrl = 'https://nube.com/portada.jpg';
+
+      mockGamesRepository.findOne.mockResolvedValue(existingGame);
+
+      mockGamesRepository.save.mockResolvedValue({ ...existingGame, imageUrl: newImageUrl });
+
+      const result = await service.updateImage(1, newImageUrl);
+
+      expect(existingGame.imageUrl).toBe(newImageUrl);
+
+      expect(mockGamesRepository.save).toHaveBeenCalledWith(existingGame);
+
+      expect(result).toEqual({
+        message: '¡Portada subida con éxito!',
+        imageUrl: newImageUrl,
+      });
+    });
+
+    it('debería lanzar NotFoundException si el juego no existe al intentar subir imagen', async () => {
+      mockGamesRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.updateImage(999, 'https://nube.com/test.jpg')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
 });

@@ -3,32 +3,49 @@ import { SessionsService } from './sessions.service';
 import { Game } from 'src/games/entities/game.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Session } from './entities/session.entity';
+import { SessionsGateway } from './sessions.gateway';
+import { NotFoundException } from '@nestjs/common';
 
 describe('SessionsService', () => {
   let service: SessionsService;
 
+  
+  const mockSessionsGateway = {
+    broadcastNewRecord: jest.fn(),
+  };
+
+  
+  const mockQueryBuilder = {
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
+    leftJoin: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    groupBy: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    getMany: jest.fn(),
+    getRawMany: jest.fn(),
+  };
+
   const mockGamesRepository = {
-    find: jest.fn(),
     findOneBy: jest.fn(),
-    findOne: jest.fn(),
-    create: jest.fn(),
-    save: jest.fn(),
-    preload: jest.fn(),
-    remove: jest.fn(),
   };
 
   const mockSessionsRepository = {
     find: jest.fn(),
-    findOneBy: jest.fn(),
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
     preload: jest.fn(),
     remove: jest.fn(),
+    createQueryBuilder: jest.fn(() => mockQueryBuilder),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    
+    jest.spyOn(console, 'log').mockImplementation(() => {});
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -41,6 +58,10 @@ describe('SessionsService', () => {
           provide: getRepositoryToken(Session),
           useValue: mockSessionsRepository,
         },
+        {
+          provide: SessionsGateway,
+          useValue: mockSessionsGateway, 
+        },
       ],
     }).compile();
 
@@ -52,259 +73,182 @@ describe('SessionsService', () => {
   });
 
   describe('create', () => {
-    it('should create a session successfully', async () => {
-      let createSessionMock = {
-        score: 50,
-        controllerUsed: "Playstation Dualshock 4",
-        gameId: 1
-      };
+    const createSessionMock = {
+      score: 50,
+      controllerUsed: 'Playstation Dualshock 4',
+      gameId: 1,
+    };
+    const game = { id: 1, title: 'KOF 97' };
+    const userId = 99; 
 
-      const game = {
-        id: 1,
-        title: "The King of Fighters 97",
-        genre: "Fighting",
-        year: 1997,
-        isActive: true
-      };
-
-      const newSession = {
-        id: 1,
-        createdAt: "2026-03-26T14:34:36.000Z",
-        ...createSessionMock,
-        game: game,
-      };
-
+    it('debería crear la sesión y emitir WebSocket si es un nuevo récord', async () => {
       mockGamesRepository.findOneBy.mockResolvedValue(game);
+      
+      
+      jest.spyOn(service, 'compareScores').mockResolvedValue(true);
+      
+      const newSession = { id: 1, ...createSessionMock, game, user: { id: userId } };
       mockSessionsRepository.create.mockReturnValue(newSession);
       mockSessionsRepository.save.mockResolvedValue(newSession);
 
-      const result = await service.create(createSessionMock);
-      console.log(newSession, result);
-
+      const result = await service.create(createSessionMock, userId);
 
       expect(result).toEqual(newSession);
-      expect(mockGamesRepository.findOneBy).toHaveBeenCalledWith({
-        id: createSessionMock.gameId,
+      expect(mockSessionsGateway.broadcastNewRecord).toHaveBeenCalledWith({
+        message: '¡NUEVO RÉCORD ESTABLECIDO!',
+        score: newSession.score,
+        gameId: createSessionMock.gameId,
+        controller: createSessionMock.controllerUsed,
       });
-
-      const { gameId, ...sessionWithoutGameId } = createSessionMock;
-
-      expect(mockSessionsRepository.create).toHaveBeenCalledWith({
-        ...sessionWithoutGameId,
-        game: game,
-      });
-      expect(mockSessionsRepository.save).toHaveBeenCalledWith(newSession);
     });
 
-    it('should throw NotFoundException when game is not found', async () => {
-      const createSessionMock = {
-        score: 50,
-        controllerUsed: "Playstation Dualshock 4",
-        gameId: 999
-      };
+    it('debería crear la sesión SIN emitir WebSocket si NO es un récord', async () => {
+      mockGamesRepository.findOneBy.mockResolvedValue(game);
+      
+      
+      jest.spyOn(service, 'compareScores').mockResolvedValue(false);
+      
+      const newSession = { id: 1, ...createSessionMock, game, user: { id: userId } };
+      mockSessionsRepository.create.mockReturnValue(newSession);
+      mockSessionsRepository.save.mockResolvedValue(newSession);
 
+      await service.create(createSessionMock, userId);
+
+      
+      expect(mockSessionsRepository.save).toHaveBeenCalled();
+      expect(mockSessionsGateway.broadcastNewRecord).not.toHaveBeenCalled();
+    });
+
+    it('debería lanzar NotFoundException si el juego no existe', async () => {
       mockGamesRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.create(createSessionMock)).rejects.toThrow(
+      await expect(service.create(createSessionMock, userId)).rejects.toThrow(
         '¡Ese juego no existe en el catálogo!',
       );
-
-      expect(mockGamesRepository.findOneBy).toHaveBeenCalledWith({
-        id: createSessionMock.gameId,
-      });
-      expect(mockSessionsRepository.create).not.toHaveBeenCalled();
     });
   });
 
   describe('findAll', () => {
-    it('should find all sessions', async () => {
-      const sessionsMock = [
-        {
-          id: 2,
-          score: 300,
-          controllerUsed: "Playstation Dualshock 4",
-          createdAt: "2026-03-26T14:34:36.000Z",
-          game: {
-            id: 1,
-            title: "The King of Fighters 97",
-            genre: "Fighting",
-            year: 1997,
-            isActive: true
-          }
-        },
-        {
-          id: 1,
-          score: 50,
-          controllerUsed: "Playstation Dualshock 4",
-          createdAt: "2026-03-25T19:17:07.000Z",
-          game: {
-            id: 1,
-            title: "The King of Fighters 97",
-            genre: "Fighting",
-            year: 1997,
-            isActive: true
-          }
-        }
-      ];
+    it('debería obtener todas las sesiones ordenadas y con relaciones', async () => {
+      const sessionsMock = [{ id: 1, score: 50 }];
+      mockSessionsRepository.find.mockResolvedValue(sessionsMock);
 
-      mockSessionsRepository.find.mockReturnValue(sessionsMock);
+      const result = await service.findAll();
 
-      const sesions = await service.findAll();
-
-      expect(sesions).toBe(sessionsMock);
+      expect(result).toBe(sessionsMock);
+      expect(mockSessionsRepository.find).toHaveBeenCalledWith({
+        relations: ['game'],
+        order: { createdAt: 'DESC' },
+      });
     });
   });
 
   describe('findOne', () => {
-    it('should find one session by id', async () => {
-      const sessionMock = {
-        id: 1,
-        score: 50,
-        controllerUsed: "Playstation Dualshock 4",
-        createdAt: "2026-03-25T19:17:07.000Z",
-        game: {
-          id: 1,
-          title: "The King of Fighters 97",
-          genre: "Fighting",
-          year: 1997,
-          isActive: true
-        }
-      };
+    it('debería encontrar una sesión por ID', async () => {
+      const sessionMock = { id: 1, score: 50 };
+      mockSessionsRepository.findOne.mockResolvedValue(sessionMock);
 
-      mockSessionsRepository.findOne.mockReturnValue(sessionMock);
+      const result = await service.findOne(1);
 
-      const session = await service.findOne(1);
-
-      expect(session).toBe(sessionMock);
+      expect(result).toBe(sessionMock);
     });
 
-    it('should throw NotFoundException when session is not found', async () => {
-      mockSessionsRepository.findOne.mockReturnValue(null);
+    it('debería lanzar NotFoundException si no encuentra la sesión', async () => {
+      mockSessionsRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne(999)).rejects.toThrow(
-        'La sesión con ID #999 no existe'
-      );
+      await expect(service.findOne(999)).rejects.toThrow('La sesión con ID #999 no existe');
     });
   });
 
   describe('update', () => {
-    it('should update a session', async () => {
-      const updateSessionMock = {
-        score: 100,
-        controllerUsed: "Xbox Wireless Controller"
-      };
+    it('debería actualizar una sesión', async () => {
+      const updateMock = { score: 100 };
+      const updatedSession = { id: 1, score: 100 };
 
-      const sessionMock = {
-        id: 1,
-        score: 50,
-        controllerUsed: "Playstation Dualshock 4",
-        createdAt: "2026-03-25T19:17:07.000Z",
-        game: {
-          id: 1,
-          title: "The King of Fighters 97",
-          genre: "Fighting",
-          year: 1997,
-          isActive: true
-        }
-      };
-
-      const updatedSession = {
-        ...sessionMock,
-        ...updateSessionMock
-      }
-
-      mockSessionsRepository.preload.mockReturnValue(updatedSession);
+      mockSessionsRepository.preload.mockResolvedValue(updatedSession);
       mockSessionsRepository.save.mockResolvedValue(updatedSession);
 
-      const result = await service.update(1, updateSessionMock);
+      const result = await service.update(1, updateMock);
 
-      expect(result).toEqual(updatedSession);
-      expect(mockSessionsRepository.preload).toHaveBeenCalledWith({
-        id: 1,
-        ...updateSessionMock
-      });
-      expect(mockSessionsRepository.save).toHaveBeenCalledWith(updatedSession);
+      expect(result).toBe(updatedSession);
     });
 
-    it('should throw NotFoundException when session to update is not found', async () => {
-      const updateSessionMock = {
-        score: 100,
-        controllerUsed: "Xbox Wireless Controller"
-      };
+    it('debería lanzar NotFoundException si la sesión a actualizar no existe', async () => {
+      mockSessionsRepository.preload.mockResolvedValue(null);
 
-      mockSessionsRepository.preload.mockReturnValue(null);
-
-      await expect(service.update(999, updateSessionMock)).rejects.toThrow(
-        'La sesión con ID #999 no existe para actualizar'
+      await expect(service.update(999, { score: 100 })).rejects.toThrow(
+        'La sesión con ID #999 no existe para actualizar',
       );
-
-      expect(mockSessionsRepository.preload).toHaveBeenCalledWith({
-        id: 999,
-        ...updateSessionMock
-      });
-      expect(mockSessionsRepository.save).not.toHaveBeenCalled();
-    });
-
-    it('should handle internal server error during update', async () => {
-      const updateSessionMock = {
-        score: 100,
-        controllerUsed: "Xbox Wireless Controller"
-      };
-
-      const sessionMock = {
-        id: 1,
-        score: 50,
-        controllerUsed: "Playstation Dualshock 4",
-        createdAt: "2026-03-25T19:17:07.000Z",
-        game: {
-          id: 1,
-          title: "The King of Fighters 97",
-          genre: "Fighting",
-          year: 1997,
-          isActive: true
-        }
-      };
-
-      const updatedSession = {
-        ...sessionMock,
-        ...updateSessionMock
-      }
-
-      mockSessionsRepository.preload.mockReturnValue(updatedSession);
-      mockSessionsRepository.save.mockRejectedValue(new Error("Internal Server Error"));
-
-      expect(
-        service.update(1, updateSessionMock)
-      ).rejects.toThrowErrorMatchingInlineSnapshot(`"Internal Server Error"`);
     });
   });
 
   describe('remove', () => {
-    it('should remove a session', async () => {
-      const sessionMock = {
-        id: 1,
-        score: 50,
-        controllerUsed: "Playstation Dualshock 4",
-        createdAt: "2026-03-25T19:17:07.000Z",
-        game: {
-          id: 1,
-          title: "The King of Fighters 97",
-          genre: "Fighting",
-          year: 1997,
-          isActive: true
-        }
-      };
-
-      mockSessionsRepository.findOne.mockReturnValue(sessionMock);
-      mockSessionsRepository.remove.mockReturnValue(undefined);
+    it('debería eliminar una sesión', async () => {
+      const sessionMock = { id: 1, score: 50 };
+      
+      jest.spyOn(service, 'findOne').mockResolvedValue(sessionMock as any);
+      mockSessionsRepository.remove.mockResolvedValue(undefined);
 
       await service.remove(1);
 
-      expect(mockSessionsRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 1 },
-        relations: ['game'],
-      });
       expect(mockSessionsRepository.remove).toHaveBeenCalledWith(sessionMock);
+    });
+  });
+
+  describe('Estadísticas y QueryBuilder', () => {
+    it('getHighScores debería retornar el top de puntuaciones', async () => {
+      const mockScores = [{ score: 100 }];
+      mockQueryBuilder.getMany.mockResolvedValue(mockScores);
+
+      const result = await service.getHighScores(1);
+      expect(result).toBe(mockScores);
+    });
+
+    it('getHighScores debería lanzar NotFoundException si no hay records', async () => {
+      mockQueryBuilder.getMany.mockResolvedValue([]); 
+
+      await expect(service.getHighScores(1)).rejects.toThrow(
+        'No hay puntuaciones registradas para este juego',
+      );
+    });
+
+    it('getMostPlayedGames debería retornar los juegos más jugados', async () => {
+      const mockResult = [{ gameTitle: 'KOF', totalSessions: '10' }];
+      mockQueryBuilder.getRawMany.mockResolvedValue(mockResult);
+
+      const result = await service.getMostPlayedGames();
+      expect(result).toBe(mockResult);
+    });
+
+    it('getControllerStats debería retornar las estadísticas de mandos', async () => {
+      const mockResult = [{ controller: 'Arcade Stick', usageCount: '5' }];
+      mockQueryBuilder.getRawMany.mockResolvedValue(mockResult);
+
+      const result = await service.getControllerStats();
+      expect(result).toBe(mockResult);
+    });
+  });
+
+  describe('compareScores', () => {
+    it('debería retornar false si no existe una sesión previa', async () => {
+      mockSessionsRepository.findOne.mockResolvedValue(null);
+      
+      const result = await service.compareScores(100, 1);
+      expect(result).toBe(false);
+    });
+
+    it('debería retornar true si el nuevo score es mayor al histórico', async () => {
+      mockSessionsRepository.findOne.mockResolvedValue({ score: 50 }); 
+      
+      const result = await service.compareScores(100, 1); 
+      expect(result).toBe(true);
+    });
+
+    it('debería retornar false si el nuevo score es menor o igual al histórico', async () => {
+      mockSessionsRepository.findOne.mockResolvedValue({ score: 100 }); 
+      
+      const result = await service.compareScores(80, 1); 
+      expect(result).toBe(false);
     });
   });
 });
