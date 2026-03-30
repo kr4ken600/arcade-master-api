@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { ArcadesModule } from './arcades/arcades.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { ArcadesModule } from './arcades/arcades.module';
     SessionsModule,
     UsersModule,
     AuthModule,
-    ArcadesModule
+    ArcadesModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [

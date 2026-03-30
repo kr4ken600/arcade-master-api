@@ -7,6 +7,12 @@ import { Repository } from 'typeorm';
 import { Game } from 'src/games/entities/game.entity';
 import { SessionsGateway } from './sessions.gateway';
 import { ActiveUserInterface } from 'src/interfaces/interfaces';
+import {
+  CONTROLLER_STATS_KEY,
+  LEADERBOARD_KEY,
+  MOST_PLAYED_GAMES_KEY,
+} from 'src/constants/keys.constants';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class SessionsService {
@@ -16,6 +22,7 @@ export class SessionsService {
     @InjectRepository(Game)
     private gamesRepository: Repository<Game>,
     private readonly sessionsGateway: SessionsGateway,
+    private readonly redisService: RedisService,
   ) {}
 
   async create(
@@ -49,6 +56,7 @@ export class SessionsService {
       });
     }
 
+    this.invalidateCache(user.arcadeId);
     return savedSession;
   }
 
@@ -95,6 +103,15 @@ export class SessionsService {
   }
 
   async getHighScores(gameId: number, user: ActiveUserInterface) {
+    const cacheKey = LEADERBOARD_KEY.replace('{id}', user.arcadeId.toString());
+    const cachedData = await this.redisService.get(cacheKey);
+
+    if (cachedData) {
+      console.log('⚡ ¡Sirviendo desde Upstash (REST API)!');
+      return cachedData;
+    }
+
+    console.log('⚡ ¡Consultando a MariaDB!');
     const highScore = await this.sessionsRepository
       .createQueryBuilder('session')
       .leftJoinAndSelect('session.game', 'game')
@@ -111,11 +128,25 @@ export class SessionsService {
         'No hay puntuaciones registradas para este juego',
       );
 
+    await this.redisService.set(cacheKey, highScore);
+
     return highScore;
   }
 
   async getMostPlayedGames(user: ActiveUserInterface) {
-    return this.sessionsRepository
+    const cacheKey = MOST_PLAYED_GAMES_KEY.replace(
+      '{id}',
+      user.arcadeId.toString(),
+    );
+    const cachedData = await this.redisService.get(cacheKey);
+
+    if (cachedData) {
+      console.log('⚡ ¡Sirviendo desde Upstash (REST API)!');
+      return cachedData;
+    }
+
+    console.log('⚡ ¡Consultando a MariaDB!');
+    const result = await this.sessionsRepository
       .createQueryBuilder('session')
       .leftJoin('session.game', 'game')
       .select('game.title', 'gameTitle')
@@ -125,10 +156,25 @@ export class SessionsService {
       .orderBy('totalSessions', 'DESC')
       .limit(5)
       .getRawMany();
+
+    await this.redisService.set(cacheKey, result);
+    return result;
   }
 
   async getControllerStats(user: ActiveUserInterface) {
-    return this.sessionsRepository
+    const cacheKey = CONTROLLER_STATS_KEY.replace(
+      '{id}',
+      user.arcadeId.toString(),
+    );
+    const cachedData = await this.redisService.get(cacheKey);
+
+    if (cachedData) {
+      console.log('⚡ ¡Sirviendo desde Upstash (REST API)!');
+      return cachedData;
+    }
+
+    console.log('⚡ ¡Consultando a MariaDB!');
+    const result = await this.sessionsRepository
       .createQueryBuilder('session')
       .select('session.controllerUsed', 'controller')
       .addSelect('COUNT(session.id)', 'usageCount')
@@ -136,9 +182,12 @@ export class SessionsService {
       .groupBy('session.controllerUsed')
       .orderBy('usageCount', 'DESC')
       .getRawMany();
+
+    await this.redisService.set(cacheKey, result);
+    return result;
   }
 
-  async compareScores(scoreCompare: number, gameId: number) {
+  private async compareScores(scoreCompare: number, gameId: number) {
     const highestSession = await this.sessionsRepository.findOne({
       where: { game: { id: gameId } },
       order: { score: 'DESC' },
@@ -148,5 +197,17 @@ export class SessionsService {
     console.log(highestSession, scoreCompare > highestSession.score);
 
     return scoreCompare > highestSession.score;
+  }
+
+  private async invalidateCache(arcadeId: number) {
+    const keysToInvalidate = [
+      LEADERBOARD_KEY.replace('{id}', arcadeId.toString()),
+      MOST_PLAYED_GAMES_KEY.replace('{id}', arcadeId.toString()),
+      CONTROLLER_STATS_KEY.replace('{id}', arcadeId.toString()),
+    ];
+
+    for (const key of keysToInvalidate) {
+      await this.redisService.delete(key);
+    }
   }
 }
