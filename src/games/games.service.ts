@@ -9,6 +9,7 @@ import { Game } from './entities/game.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { loggerSentry } from 'src/utils/sentry.util';
+import { ActiveUserInterface } from 'src/interfaces/interfaces';
 
 @Injectable()
 export class GamesService {
@@ -17,9 +18,15 @@ export class GamesService {
     private gamesRepository: Repository<Game>,
   ) {}
 
-  async create(createGameDto: CreateGameDto): Promise<Game> {
+  async create(
+    createGameDto: CreateGameDto,
+    user: ActiveUserInterface,
+  ): Promise<Game> {
     try {
-      const newGame = this.gamesRepository.create(createGameDto);
+      const newGame = this.gamesRepository.create({
+        ...createGameDto,
+        arcadeId: user.arcadeId,
+      });
       return await this.gamesRepository.save(newGame);
     } catch (error: unknown) {
       if (
@@ -39,9 +46,9 @@ export class GamesService {
     return await this.gamesRepository.find();
   }
 
-  async findOne(id: number): Promise<Game> {
+  async findOne(id: number, user: ActiveUserInterface): Promise<Game> {
     const game = await this.gamesRepository.findOne({
-      where: { id },
+      where: { id, arcadeId: user.arcadeId },
       relations: ['sessions'],
       order: {
         sessions: {
@@ -87,14 +94,14 @@ export class GamesService {
     }
   }
 
-  async remove(id: number): Promise<void> {
-    const game = await this.findOne(id);
+  async remove(id: number, user: ActiveUserInterface): Promise<void> {
+    const game = await this.findOne(id, user);
 
     await this.gamesRepository.remove(game);
   }
 
-  async updateImage(id: number, imageUrl: string) {
-    const game = await this.findOne(id);
+  async updateImage(id: number, imageUrl: string, user: ActiveUserInterface) {
+    const game = await this.findOne(id, user);
 
     game.imageUrl = imageUrl;
     await this.gamesRepository.save(game);

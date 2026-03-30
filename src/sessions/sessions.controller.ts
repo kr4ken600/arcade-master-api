@@ -7,14 +7,13 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  Req,
 } from '@nestjs/common';
 import { SessionsService } from './sessions.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { Request } from 'express';
+import { ActiveUser } from 'src/auth/decorators/active-user.decorator';
+import type { ActiveUserInterface } from 'src/interfaces/interfaces';
 
 @ApiTags('Sessions')
 @ApiBearerAuth()
@@ -25,22 +24,22 @@ export class SessionsController {
   @Post()
   create(
     @Body() createSessionDto: CreateSessionDto,
-    @Req() req: Request & { user: { userId: number } },
+    @ActiveUser() user: ActiveUserInterface,
   ) {
-    const userId = req.user.userId;
-    return this.sessionsService.create(createSessionDto, userId);
+    return this.sessionsService.create(createSessionDto, user);
   }
 
-  @Public()
   @Get()
-  findAll() {
-    return this.sessionsService.findAll();
+  findAll(@ActiveUser() user: ActiveUserInterface) {
+    return this.sessionsService.findAll(user);
   }
 
-  @Public()
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.sessionsService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() user: ActiveUserInterface,
+  ) {
+    return this.sessionsService.findOne(id, user);
   }
 
   @Patch(':id')
@@ -52,25 +51,28 @@ export class SessionsController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.sessionsService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() user: ActiveUserInterface,
+  ) {
+    return this.sessionsService.remove(id, user);
   }
 
-  @Public()
   @Get('stats/most-played')
-  getMostPlayed() {
-    return this.sessionsService.getMostPlayedGames();
+  getMostPlayed(@ActiveUser() user: ActiveUserInterface) {
+    return this.sessionsService.getMostPlayedGames(user);
   }
 
-  @Public()
   @Get('stats/controllers')
-  getControllerStats() {
-    return this.sessionsService.getControllerStats();
+  getControllerStats(@ActiveUser() user: ActiveUserInterface) {
+    return this.sessionsService.getControllerStats(user);
   }
 
-  @Public()
   @Get('game/:gameId/highscores')
-  getHighScores(@Param('gameId', ParseIntPipe) gameId: number) {
-    return this.sessionsService.getHighScores(gameId);
+  getHighScores(
+    @Param('gameId', ParseIntPipe) gameId: number,
+    @ActiveUser() user: ActiveUserInterface,
+  ) {
+    return this.sessionsService.getHighScores(gameId, user);
   }
 }

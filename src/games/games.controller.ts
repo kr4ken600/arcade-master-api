@@ -25,6 +25,8 @@ import { Role } from 'src/constants/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { CloudinaryService } from './cloudinary.service';
+import { ActiveUser } from 'src/auth/decorators/active-user.decorator';
+import type { ActiveUserInterface } from 'src/interfaces/interfaces';
 
 @ApiTags('Games')
 @ApiBearerAuth()
@@ -38,8 +40,11 @@ export class GamesController {
 
   @Post()
   @Roles(Role.ADMIN)
-  create(@Body() createGameDto: CreateGameDto) {
-    return this.gamesService.create(createGameDto);
+  create(
+    @Body() createGameDto: CreateGameDto,
+    @ActiveUser() user: ActiveUserInterface,
+  ) {
+    return this.gamesService.create(createGameDto, user);
   }
 
   @Public()
@@ -48,10 +53,9 @@ export class GamesController {
     return this.gamesService.findAll();
   }
 
-  @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.gamesService.findOne(+id);
+  findOne(@Param('id') id: string, @ActiveUser() user: ActiveUserInterface) {
+    return this.gamesService.findOne(+id, user);
   }
 
   @Patch(':id')
@@ -66,8 +70,11 @@ export class GamesController {
   @Delete(':id')
   @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.gamesService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() user: ActiveUserInterface,
+  ) {
+    return this.gamesService.remove(id, user);
   }
 
   @Post(':id/image')
@@ -80,6 +87,7 @@ export class GamesController {
   async uploadGameImage(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
+    @ActiveUser() user: ActiveUserInterface,
   ) {
     if (!file) {
       throw new BadRequestException('¡Olvidaste adjuntar la imagen!');
@@ -87,6 +95,10 @@ export class GamesController {
 
     const cloudinaryResponse = await this.cloudinaryService.uploadImage(file);
 
-    return this.gamesService.updateImage(id, cloudinaryResponse.secure_url);
+    return this.gamesService.updateImage(
+      id,
+      cloudinaryResponse.secure_url,
+      user,
+    );
   }
 }
