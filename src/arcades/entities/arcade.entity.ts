@@ -1,5 +1,7 @@
-import { User } from "src/users/entities/user.entity";
+import { Game } from "src/games/entities/game.entity";
+import { User } from "../../users/entities/user.entity";
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Session } from "src/sessions/entities/session.entity";
 
 @Entity()
 export class Arcade {
@@ -23,4 +25,10 @@ export class Arcade {
 
   @OneToMany(() => User, (user) => user.arcade)
   users: User[];
+
+  @OneToMany(() => Game, (game) => game.arcade)
+  games: Game[];
+
+  @OneToMany(() => Session, (session) => session.arcade)
+  sessions: Session[];
 }

@@ -17,17 +17,15 @@ export class AuthService {
       const payload = {
         sub: user.id,
         email: user.email,
-        username: user.username,
         role: user.role,
+        arcadeId: user.arcadeId
       };
 
       return {
         access_token: this.jwtService.sign(payload),
         user: {
           id: user.id,
-          email: user.email,
-          username: user.username,
-          role: user.role,
+          username: user.username
         },
       };
     }

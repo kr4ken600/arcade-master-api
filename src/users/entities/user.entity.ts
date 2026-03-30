@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { Arcade } from 'src/arcades/entities/arcade.entity';
+import { Arcade } from '../../arcades/entities/arcade.entity';
 import { Role } from 'src/constants/role.enum';
 import { Session } from 'src/sessions/entities/session.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';

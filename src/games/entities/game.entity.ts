@@ -1,5 +1,6 @@
+import { Arcade } from 'src/arcades/entities/arcade.entity';
 import { Session } from 'src/sessions/entities/session.entity';
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity()
 export class Game {
@@ -23,4 +24,14 @@ export class Game {
 
   @OneToMany(() => Session, (session) => session.game)
   sessions: Session[];
+
+  @ManyToOne(() => Arcade, (arcade) => arcade.games, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'arcadeId' })
+  arcade: Arcade;
+
+  @Column({ nullable: true })
+  arcadeId: number;
 }
