@@ -1,6 +1,13 @@
 import { Arcade } from 'src/arcades/entities/arcade.entity';
 import { Session } from 'src/sessions/entities/session.entity';
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 
 @Entity()
 export class Game {

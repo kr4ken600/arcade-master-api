@@ -8,6 +8,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [TypeOrmModule.forFeature([Arcade])],
   controllers: [ArcadesController],
   providers: [ArcadesService],
-  exports: [ArcadesService]
+  exports: [ArcadesService],
 })
 export class ArcadesModule {}

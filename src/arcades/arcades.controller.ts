@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { ArcadesService } from './arcades.service';
 import { CreateArcadeDto } from './dto/create-arcade.dto';
-import { UpdateArcadeDto } from './dto/update-arcade.dto';
 
 @Controller('arcades')
 export class ArcadesController {
@@ -12,23 +11,13 @@ export class ArcadesController {
     return this.arcadesService.create(createArcadeDto);
   }
 
-  @Get()
-  findAll() {
-    return this.arcadesService.findAll();
+  @Get(':name')
+  findOne(@Param('name') name: string) {
+    return this.arcadesService.findOne(name);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.arcadesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateArcadeDto: UpdateArcadeDto) {
-    return this.arcadesService.update(+id, updateArcadeDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.arcadesService.remove(+id);
+  @Delete(':name')
+  remove(@Param('name') name: string) {
+    return this.arcadesService.remove(name);
   }
 }

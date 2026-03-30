@@ -18,14 +18,14 @@ export class AuthService {
         sub: user.id,
         email: user.email,
         role: user.role,
-        arcadeId: user.arcadeId
+        arcadeId: user.arcadeId,
       };
 
       return {
         access_token: this.jwtService.sign(payload),
         user: {
           id: user.id,
-          username: user.username
+          username: user.username,
         },
       };
     }

@@ -6,6 +6,7 @@ import { Session } from './entities/session.entity';
 import { Repository } from 'typeorm';
 import { Game } from 'src/games/entities/game.entity';
 import { SessionsGateway } from './sessions.gateway';
+import { ActiveUserInterface } from 'src/interfaces/interfaces';
 
 @Injectable()
 export class SessionsService {
@@ -19,7 +20,7 @@ export class SessionsService {
 
   async create(
     createSessionDto: CreateSessionDto,
-    userId: number,
+    user: ActiveUserInterface,
   ): Promise<Session> {
     const { gameId, ...sessionData } = createSessionDto;
 
@@ -29,7 +30,8 @@ export class SessionsService {
     const newSession = this.sessionsRepository.create({
       ...sessionData,
       game: game,
-      user: { id: userId },
+      user: { id: user.userId },
+      arcadeId: user.arcadeId,
     });
 
     const compareScore = await this.compareScores(
@@ -50,16 +52,17 @@ export class SessionsService {
     return savedSession;
   }
 
-  async findAll(): Promise<Session[]> {
+  async findAll(user: ActiveUserInterface): Promise<Session[]> {
     return await this.sessionsRepository.find({
       relations: ['game'],
+      where: { arcadeId: user.arcadeId },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: number): Promise<Session> {
+  async findOne(id: number, user: ActiveUserInterface): Promise<Session> {
     const session = await this.sessionsRepository.findOne({
-      where: { id },
+      where: { id, arcadeId: user.arcadeId },
       relations: ['game'],
     });
 
@@ -86,18 +89,19 @@ export class SessionsService {
     return await this.sessionsRepository.save(session);
   }
 
-  async remove(id: number): Promise<void> {
-    const session = await this.findOne(id);
+  async remove(id: number, user: ActiveUserInterface): Promise<void> {
+    const session = await this.findOne(id, user);
     await this.sessionsRepository.remove(session);
   }
 
-  async getHighScores(gameId: number) {
+  async getHighScores(gameId: number, user: ActiveUserInterface) {
     const highScore = await this.sessionsRepository
       .createQueryBuilder('session')
       .leftJoinAndSelect('session.game', 'game')
       .leftJoin('session.user', 'user')
       .addSelect(['user.username'])
       .where('session.gameId = :gameId', { gameId })
+      .andWhere('session.arcadeId = :arcadeId', { arcadeId: user.arcadeId })
       .orderBy('session.score', 'DESC')
       .limit(10)
       .getMany();
@@ -110,23 +114,25 @@ export class SessionsService {
     return highScore;
   }
 
-  async getMostPlayedGames() {
+  async getMostPlayedGames(user: ActiveUserInterface) {
     return this.sessionsRepository
       .createQueryBuilder('session')
       .leftJoin('session.game', 'game')
       .select('game.title', 'gameTitle')
       .addSelect('COUNT(session.id)', 'totalSessions')
+      .where('session.arcadeId = :arcadeId', { arcadeId: user.arcadeId })
       .groupBy('game.id')
       .orderBy('totalSessions', 'DESC')
       .limit(5)
       .getRawMany();
   }
 
-  async getControllerStats() {
+  async getControllerStats(user: ActiveUserInterface) {
     return this.sessionsRepository
       .createQueryBuilder('session')
       .select('session.controllerUsed', 'controller')
       .addSelect('COUNT(session.id)', 'usageCount')
+      .where('session.arcadeId = :arcadeId', { arcadeId: user.arcadeId })
       .groupBy('session.controllerUsed')
       .orderBy('usageCount', 'DESC')
       .getRawMany();

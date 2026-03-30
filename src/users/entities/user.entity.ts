@@ -2,7 +2,14 @@ import { Exclude } from 'class-transformer';
 import { Arcade } from '../../arcades/entities/arcade.entity';
 import { Role } from 'src/constants/role.enum';
 import { Session } from 'src/sessions/entities/session.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class User {
@@ -30,7 +37,7 @@ export class User {
   sessions: Session[];
 
   @ManyToOne(() => Arcade, (arcade) => arcade.users)
-  @JoinColumn({ name: 'arcadeId' }) 
+  @JoinColumn({ name: 'arcadeId' })
   arcade: Arcade;
 
   @Column({ nullable: true })
